@@ -48,7 +48,7 @@ def create_app():
     app.register_blueprint(api_bp)
 
     # 允许跨域（只允许你的前端域名，安全！）
-    CORS(app, origins=["https://cursor-auto-account-web.vercel.app", "http://cursor.viper3.top"], supports_credentials=True)
+    CORS(app, origins=["https://cursor-auto-account-web.vercel.app", "https://cursor.viper3.top"], supports_credentials=True)
 
     return app
 
