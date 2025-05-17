@@ -4,7 +4,7 @@ import string
 from datetime import datetime
 from flask import Flask
 from dotenv import load_dotenv
-
+from flask_cors import CORS
 # 加载.env文件
 load_dotenv()
 
@@ -46,6 +46,9 @@ def create_app():
 
     # 注册蓝图
     app.register_blueprint(api_bp)
+
+    # 允许跨域（只允许你的前端域名，安全！）
+    CORS(app, origins=["https://cursor-auto-account-web.vercel.app", "http://cursor.viper3.top"], supports_credentials=True)
 
     return app
 
