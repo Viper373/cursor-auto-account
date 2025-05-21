@@ -50,15 +50,18 @@ def create_app():
     # 允许跨域（只允许你的前端域名，安全！）
     CORS(app, origins=["https://cursor-auto-account-web.vercel.app", "https://cursor.viper3.top"], supports_credentials=True)
 
+    # 初始化数据库 (确保在Vercel环境下也会执行)
+    with app.app_context(): # 确保在应用上下文中执行
+        init_db(app)
+
     return app
+
+app = create_app()
 
 # 应用入口
 if __name__ == '__main__':
-    # 创建应用
-    app = create_app()
-
-    # 初始化数据库
-    init_db(app)
+    # 初始化数据库 # 已移至 create_app
+    # init_db(app)
 
     # 获取环境变量中的主机和端口，默认为0.0.0.0:8001
     host = os.getenv('HOST', '0.0.0.0')
