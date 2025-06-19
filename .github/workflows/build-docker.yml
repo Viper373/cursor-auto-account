@@ -3,7 +3,7 @@ name: Build and Deploy Cursor API
 on:
   workflow_dispatch: # 允许手动触发
   push:
-    branches: [ main ] # 推送到 main 分支时触发
+    branches: [ master ] # 推送到 main 分支时触发
 
 jobs:
   build-and-deploy:
