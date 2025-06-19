@@ -6,7 +6,7 @@
 
 这是一个用于管理 Cursor 账号的 Web 服务，支持自动注册、存储账号信息、查看和修改账号状态。
 
-[预览站点](https://cursor-account.zoowayss.top)
+[预览站点](https://cursor-account.zoowayss.dpdns.org)
 
 资源有限，请勿滥用账号
 
