@@ -3,7 +3,7 @@ name: Build and Deploy Cursor API
 on:
   workflow_dispatch: # 允许手动触发
   push:
-    branches: [ master ] # 推送到 main 分支时触发
+    branches: [ master ] # 推送到 master 分支时触发
 
 jobs:
   build-and-deploy:
@@ -54,8 +54,8 @@ jobs:
         context: .
         push: true
         tags: |
-          ghcr.io/${{ github.repository_owner }}/cursorapi:latest
-          ghcr.io/${{ github.repository_owner }}/cursorapi:${{ github.sha }}
+          ghcr.io/${{ viper373 }}/cursorapi:latest
+          ghcr.io/${{ viper373 }}/cursorapi:${{ github.sha }}
 
     - name: Start services with Docker Compose
       run: docker-compose up -d
