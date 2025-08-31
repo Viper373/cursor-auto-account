@@ -1,0 +1,61 @@
+name: Build and Deploy Cursor API
+
+on:
+  workflow_dispatch: # 允许手动触发
+  push:
+    branches: [ master ] # 推送到 master 分支时触发
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      EMAIL_DOMAIN: ${{ secrets.EMAIL_DOMAIN }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Create .env file
+      run: |
+        cat << EOF > .env
+        DB_HOST=${DB_HOST}
+        DB_PORT=${DB_PORT}
+        DB_USER=${DB_USER}
+        DB_PASSWORD=${DB_PASSWORD}
+        DB_NAME=${DB_NAME}
+        SECRET_KEY=$(openssl rand -hex 32)
+        TOKEN_EXPIRY_DAYS=30
+        ADMIN_USERNAME=${ADMIN_USERNAME}
+        ADMIN_PASSWORD=${ADMIN_PASSWORD}
+        EMAIL_DOMAIN=${EMAIL_DOMAIN}
+        EOF
+        cat .env
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ghcr.io/${{ viper373 }}/cursorapi:latest
+          ghcr.io/${{ viper373 }}/cursorapi:${{ github.sha }}
+
+    - name: Start services with Docker Compose
+      run: docker-compose up -d
