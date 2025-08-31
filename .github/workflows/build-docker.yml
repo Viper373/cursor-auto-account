@@ -61,8 +61,4 @@ jobs:
           ghcr.io/${{ env.OWNER_LC }}/cursorapi:latest
           ghcr.io/${{ env.OWNER_LC }}/cursorapi:${{ github.sha }}
 
-    - name: Start services with Docker Compose
-      uses: docker/compose-action@v3
-      with:
-        compose-file: ./docker-compose.yml
-        up: -d
+    # 构建并推送镜像即可，不在 CI 内运行容器
