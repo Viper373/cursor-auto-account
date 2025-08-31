@@ -3,10 +3,14 @@ import time
 import traceback
 import threading
 from functools import wraps
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, Response, stream_with_context
+import json
+import queue
+import threading
+from sqlalchemy import func
 from models import db, User, Account
 from auth import token_required, admin_required, generate_token
-from account_service import create_account_for_user
+from account_service import create_account_for_user, create_account_for_user_stream
 
 # 创建蓝图
 api_bp = Blueprint('api', __name__, url_prefix='/api')
@@ -164,6 +168,54 @@ def get_account():
             'message': str(e)
         }), 500
 
+
+# 实时日志（SSE）获取新账号
+@api_bp.route('/account/stream', methods=['GET'])
+@token_required
+@limit_concurrency(account_semaphore)
+def get_account_stream():
+    def sse_format(data: str, event: str = None):
+        if event:
+            return f"event: {event}\n" f"data: {data}\n\n"
+        return f"data: {data}\n\n"
+
+    user = request.current_user
+    app_ctx = current_app._get_current_object()
+    q: queue.Queue[tuple[str, str]] = queue.Queue()
+
+    def worker():
+        try:
+            def cb(line: str):
+                q.put(('log', line))
+            # 推入 Flask 应用上下文，供数据库等使用
+            with app_ctx.app_context():
+                result = create_account_for_user_stream(user, cb)
+            q.put(('done', json.dumps(result, ensure_ascii=False)))
+        except Exception as e:
+            q.put(('error', json.dumps({'status': 'error', 'message': str(e)}, ensure_ascii=False)))
+        finally:
+            q.put(('close', ''))
+
+    threading.Thread(target=worker, daemon=True).start()
+
+    @stream_with_context
+    def generate():
+        # 立即发送一条心跳/握手，确保连接建立并避免某些代理超时
+        yield sse_format('连接已建立', 'log')
+        while True:
+            event, payload = q.get()
+            if event == 'close':
+                break
+            yield sse_format(payload, event)
+
+    headers = {
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no'
+    }
+    return Response(generate(), headers=headers)
+
 # 获取用户的所有账号
 @api_bp.route('/accounts', methods=['GET'])
 @token_required
@@ -190,6 +242,29 @@ def get_user_accounts():
 
     except Exception as e:
         logger.error(f"获取用户账号失败: {traceback.format_exc()}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# 用户账号统计（排除已删除，available 排除已过期）
+@api_bp.route('/accounts/stats', methods=['GET'])
+@token_required
+def get_user_account_stats():
+    try:
+        user_id = request.current_user.id
+        now_ts = int(time.time())
+
+        base_q = Account.query.filter_by(user_id=user_id, is_deleted=0)
+        total = base_q.count()
+        used = base_q.filter(Account.is_used == 1).count()
+        available = base_q.filter(Account.is_used == 0, Account.expire_time > now_ts).count()
+
+        return jsonify({
+            'status': 'success',
+            'total': total,
+            'used': used,
+            'available': available
+        })
+    except Exception as e:
+        logger.error(f"获取用户账号统计失败: {traceback.format_exc()}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 # 修改账号使用状态

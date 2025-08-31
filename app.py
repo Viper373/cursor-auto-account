@@ -47,8 +47,13 @@ def create_app():
     # 注册蓝图
     app.register_blueprint(api_bp)
 
-    # 允许跨域（只允许你的前端域名，安全！）
-    CORS(app, origins=["https://cursor-auto-account-web.vercel.app", "https://cursor.viper3.top"], supports_credentials=True)
+    # 允许跨域：仅放行前端地址（REACT_URL，支持逗号分隔）
+    cors_origins = os.getenv('REACT_URL', '')
+    origins = [o.strip() for o in cors_origins.split(',') if o.strip()]
+    if not origins:
+        origins = ['*']  # 开发兜底，可在 .env 写入 REACT_URL 后再收紧
+    CORS(app, origins=origins, supports_credentials=True)
+
 
     # 初始化数据库 (确保在Vercel环境下也会执行)
     with app.app_context(): # 确保在应用上下文中执行

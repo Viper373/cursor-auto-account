@@ -48,20 +48,27 @@ git clone https://github.com/zoowayss/cursor-auto-account.git
 cd cursor-auto-account
 ```
 
-2. 配置环境变量（可选）
-创建 `.env` 文件并设置以下环境变量：
+2. 配置环境变量（建议）
+复制 `.env.example` 为 `.env` 并按需修改：
 ```
 DB_HOST=your_db_host
 DB_PORT=3306
 DB_USER=your_db_user
 DB_PASSWORD=your_db_password
 DB_NAME=your_db_name
-SECRET_KEY=your_secret_key
+SECRET_KEY=your_secret_key              # 固定密钥，避免重启后 token 失效
 TOKEN_EXPIRY_DAYS=30
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=admin
 EMAIL_DOMAIN=your_email_domain
+
+# 统一地址变量
+API_URL=http://127.0.0.1:5000           # 后端自身对外地址
+REACT_URL=http://127.0.0.1:3000         # 前端站点地址（可逗号分隔多个），用于 CORS 放行
 ```
+
+说明：
+- CORS 放行仅读取 `REACT_URL`；若为空则开发模式放开，线上请务必配置。
 
 3. 启动服务
 ```bash
@@ -128,6 +135,11 @@ python app.py
 
 3. 访问服务
    - 网页界面: http://localhost:8001
+
+## 环境变量一览
+
+- API_URL：后端对外基础地址
+- REACT_URL：允许跨域访问的前端地址（逗号分隔）
 
 ## 免责声明
 
