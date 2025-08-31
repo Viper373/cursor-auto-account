@@ -11,10 +11,9 @@ RUN apt-get update && apt-get install -y \
     libxi6 \
     libgconf-2-4 \
     socat \
-    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable \
+    && wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt-get install -y /tmp/google-chrome.deb || apt-get -f install -y \
+    && rm -f /tmp/google-chrome.deb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
