@@ -1,4 +1,4 @@
-name: Build and Deploy Cursor API
+name: Build Cursor API
 
 on:
   workflow_dispatch: # 允许手动触发
