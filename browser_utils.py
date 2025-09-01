@@ -16,33 +16,6 @@ class BrowserManager:
     def _get_browser_options(self, user_agent=None):
         """获取浏览器配置"""
         co = ChromiumOptions()
-        # 1) 浏览器可执行文件路径优先从环境变量读取
-        #    支持 BROWSER_PATH（项目自定义）与 DP_BROWSER_PATH（DrissionPage 兼容）
-        browser_path_env = os.getenv('BROWSER_PATH') or os.getenv('DP_BROWSER_PATH')
-        # 2) 常见路径回退（apt / snap）
-        common_paths = [
-            '/usr/bin/google-chrome',
-            '/usr/bin/chromium',
-            '/snap/bin/chromium',
-        ]
-        browser_path = None
-        for p in [browser_path_env, *common_paths]:
-            if p and os.path.exists(p):
-                browser_path = p
-                break
-
-        if browser_path:
-            try:
-                # DrissionPage 方式
-                if hasattr(co, 'set_browser_path'):
-                    co.set_browser_path(browser_path)
-                # 兜底：设置环境变量供底层读取
-                os.environ['DP_BROWSER_PATH'] = browser_path
-                logging.info(f"Using browser at: {browser_path}")
-            except Exception as e:
-                logging.warning(f"设置浏览器路径失败: {e}")
-        else:
-            logging.warning("未检测到可用的浏览器可执行文件，请在 .env 中设置 BROWSER_PATH")
         try:
             extension_path = self._get_extension_path("turnstilePatch")
             co.add_extension(extension_path)
@@ -55,7 +28,6 @@ class BrowserManager:
         co.set_argument("--remote-debugging-address=0.0.0.0")
         co.set_argument("--no-sandbox")
         co.set_argument("--disable-gpu")
-        co.set_argument("--disable-dev-shm-usage")
         if user_agent:
             co.set_user_agent(user_agent)
 
