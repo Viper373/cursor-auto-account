@@ -2,20 +2,33 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# 安装 Chrome 和依赖（用于DrissionPage）
-RUN apt-get update && apt-get install -y \
-    wget \
-    gnupg \
-    unzip \
-    xvfb \
-    libxi6 \
-    libgconf-2-4 \
-    socat \
-    && wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
-    && apt-get install -y /tmp/google-chrome.deb || apt-get -f install -y \
-    && rm -f /tmp/google-chrome.deb \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# 安装 Chrome 和依赖（用于 DrissionPage）
+# 说明：在某些环境 libgconf-2-4 在新发行版中已被移除，故不再依赖它。
+RUN set -eux; \
+    # 可选：替换为国内镜像以加速 apt（如不需要请注释掉下面两行）
+    sed -i.bak 's|http://deb.debian.org/debian|https://mirrors.tuna.tsinghua.edu.cn/debian|g' /etc/apt/sources.list || true; \
+    sed -i.bak 's|http://security.debian.org/debian-security|https://mirrors.tuna.tsinghua.edu.cn/debian-security|g' /etc/apt/sources.list || true; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+      wget \
+      gnupg \
+      unzip \
+      xvfb \
+      libxi6 \
+      socat \
+      libnss3 \
+      libxss1 \
+      libgbm1 \
+      fonts-liberation \
+      xdg-utils \
+      ca-certificates \
+    ; \
+    # 下载并安装 chrome deb，使用 dpkg 安装然后修复依赖
+    wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb; \
+    dpkg -i /tmp/google-chrome.deb || apt-get -f install -y; \
+    rm -f /tmp/google-chrome.deb; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/* /tmp/*
 
 # 复制项目文件
 COPY requirements.txt .
@@ -37,6 +50,7 @@ ENV PYTHONUNBUFFERED=1
 ENV HOST=0.0.0.0
 ENV PORT=8001
 ENV DEBUG=false
+ENV BROWSER_PATH=/usr/bin/google-chrome
 
 # 创建启动脚本
 COPY start.sh /start.sh
