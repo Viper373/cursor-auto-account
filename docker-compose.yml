@@ -7,7 +7,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile  # 使用更新后的Dockerfile
-    container_name: cursor-app
+    container_name: cursorapi
     restart: always
     environment:
       - DEBUG=false
@@ -21,6 +21,8 @@ services:
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
       - EMAIL_DOMAIN=${EMAIL_DOMAIN:-zoowayss.eu.org}
+      - API_URL=${API_URL:-http://127.0.0.1:5000}
+      - REACT_URL=${REACT_URL:-http://127.0.0.1:3000}
     volumes:
       - ./screenshots:/app/screenshots
       # 如果宿主机上有Chrome，可以映射以下路径，否则使用容器内的Chrome
