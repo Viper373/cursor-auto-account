@@ -4,8 +4,8 @@ WORKDIR /app
 
 # 安装 Chrome 和依赖（用于 DrissionPage）
 # 说明：在某些环境 libgconf-2-4 在新发行版中已被移除，故不再依赖它。
-RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list && \
-    sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
+    sed -i 's/security.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       wget \
