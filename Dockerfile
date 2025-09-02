@@ -50,7 +50,6 @@ ENV PYTHONUNBUFFERED=1
 ENV HOST=0.0.0.0
 ENV PORT=8001
 ENV DEBUG=false
-ENV BROWSER_PATH=/usr/bin/google-chrome
 
 # 创建启动脚本
 COPY start.sh /start.sh
