@@ -4,9 +4,18 @@ WORKDIR /app
 
 # 安装 Chrome 和依赖（用于 DrissionPage）
 # 说明：在某些环境 libgconf-2-4 在新发行版中已被移除，故不再依赖它。
-RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
-    sed -i 's/security.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
-    apt-get update; \
+RUN set -eux && \
+    # 替换为清华源（支持新旧两种格式）
+    if [ -f /etc/apt/sources.list ]; then \
+        sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
+        sed -i 's/security.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list; \
+    elif [ -f /etc/apt/sources.list.d/debian.sources ]; then \
+        sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list.d/debian.sources && \
+        sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list.d/debian.sources; \
+    fi && \
+    # 更新包列表
+    apt-get update && \
+    # 安装基础依赖
     apt-get install -y --no-install-recommends \
       wget \
       gnupg \
@@ -20,13 +29,19 @@ RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.li
       fonts-liberation \
       xdg-utils \
       ca-certificates \
-    ; \
-    # 下载并安装 chrome deb，使用 dpkg 安装然后修复依赖
-    wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb; \
-    dpkg -i /tmp/google-chrome.deb || apt-get -f install -y; \
-    rm -f /tmp/google-chrome.deb; \
-    apt-get clean; \
-    rm -rf /var/lib/apt/lists/* /tmp/*
+      curl \
+    && \
+    # 下载并安装 Chrome
+    echo "Downloading Chrome..." && \
+    wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
+    echo "Installing Chrome..." && \
+    dpkg -i /tmp/google-chrome.deb || (apt-get update && apt-get -f install -y) && \
+    # 验证安装
+    which google-chrome && google-chrome --version && \
+    # 清理
+    rm -f /tmp/google-chrome.deb && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # 复制项目文件
 COPY requirements.txt .
