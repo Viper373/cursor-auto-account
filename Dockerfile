@@ -4,10 +4,8 @@ WORKDIR /app
 
 # 安装 Chrome 和依赖（用于 DrissionPage）
 # 说明：在某些环境 libgconf-2-4 在新发行版中已被移除，故不再依赖它。
-RUN set -eux; \
-    # 可选：替换为国内镜像以加速 apt（如不需要请注释掉下面两行）
-    sed -i.bak 's|http://deb.debian.org/debian|https://mirrors.tuna.tsinghua.edu.cn/debian|g' /etc/apt/sources.list || true; \
-    sed -i.bak 's|http://security.debian.org/debian-security|https://mirrors.tuna.tsinghua.edu.cn/debian-security|g' /etc/apt/sources.list || true; \
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+    sed -i 's/security.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list && \
     apt-get update; \
     apt-get install -y --no-install-recommends \
       wget \
